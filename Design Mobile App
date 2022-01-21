@@ -1,0 +1,147 @@
+class RegistrationActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_register)
+        createUserBtn?.setOnClickListener {
+            signUpTapped()
+        }
+    }
+    private fun signUpTapped() {
+        val user = User()
+        user.uid = etMobile.text.toString()
+        user.name = etName.text.toString()
+        registerUser(user)
+    }
+    private fun registerUser(user: User) {
+        progressBar.visibility = View.VISIBLE
+        CometChat.createUser(user, AppConfig.AppDetails.API_KEY, object : CometChat.CallbackListener<User>() {
+                override fun onSuccess(user: User) {
+                    progressBar.visibility = View.GONE
+                    login(user)
+                }
+                override fun onError(e: CometChatException) {
+                    progressBar.visibility = View.GONE
+                    createUserBtn.isClickable = true
+                    Toast.makeText(this@RegistrationActivity, e.localizedMessage, Toast.LENGTH_LONG).show()
+                }
+            })
+    }
+    private fun login(user: User) {
+        progressBar.visibility = View.VISIBLE
+        CometChat.login(user.uid, AppConfig.AppDetails.API_KEY, object : CometChat.CallbackListener<User?>() {
+                override fun onSuccess(user: User?) {
+                    progressBar.visibility = View.GONE
+                    startActivity(Intent(this@RegistrationActivity, ConversationsActivity::class.java))
+                }
+                override fun onError(e: CometChatException) {
+                    progressBar.visibility = View.GONE
+                    Toast.makeText(this@RegistrationActivity, e.localizedMessage, Toast.LENGTH_LONG).show()
+                }
+            })
+    }
+}class LoginActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_login)
+        loginBtn?.setOnClickListener {
+            signInTapped()
+        }
+        signUpBtn?.setOnClickListener {
+            startActivity(Intent(this@LoginActivity, RegistrationActivity::class.java))
+        }
+    }
+    private fun signInTapped() {
+        val user = User()
+        user.uid = etMobile.text.toString()
+        login(user)
+    }
+    private fun login(user: User) {
+        progressBar.visibility = View.VISIBLE
+        CometChat.login(user.uid, AppConfig.AppDetails.API_KEY, object : CometChat.CallbackListener<User?>() {
+                override fun onSuccess(user: User?) {
+                    progressBar.visibility = View.GONE
+                    startActivity(Intent(this@LoginActivity, ConversationsActivity::class.java))
+                }
+                override fun onError(e: CometChatException) {
+                    progressBar.visibility = View.GONE
+                    Toast.makeText(this@LoginActivity, e.localizedMessage, Toast.LENGTH_LONG).show()
+                }
+            })
+    }
+}class ConversationsActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_conversations)
+    }
+}<fragment
+  android:id="@+id/conversationList"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  class="screen.CometChatConversationListScreen"/>CometChatConversationListScreen.setItemClickListener(object : OnItemClickListener<Conversation?>() {
+    override fun OnItemClick(conversation: Conversation?, position: Int) {
+        val user = conversation?.conversationWith.as User
+        val intent = Intent(this@ConversationsActivity, CometChatMessageScreen::class.java)
+        intent.putExtra(StringContract.IntentStrings.UID, user.uid)
+        intent.putExtra(StringContract.IntentStrings.NAME, user.name)
+        intent.putExtra(StringContract.IntentStrings.AVATAR, user.avatar)
+        intent.putExtra(StringContract.IntentStrings.TYPE, CometChatConstants.RECEIVER_TYPE_USER);
+        startActivity(intent)
+    }
+})class ConversationsActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_conversations)
+
+        CometChatConversationListScreen.setItemClickListener(object : OnItemClickListener<Conversation?>() {
+            override fun OnItemClick(conversation: Conversation?, position: Int) {
+                val user = User.fromJson(conversation?.conversationWith.toString())
+                val intent = Intent(this@ConversationsActivity, CometChatMessageScreen::class.java)
+                intent.putExtra(StringContract.IntentStrings.UID, user.uid)
+                intent.putExtra(StringContract.IntentStrings.NAME, user.name)
+                intent.putExtra(StringContract.IntentStrings.AVATAR, user.avatar)
+                intent.putExtra(StringContract.IntentStrings.TYPE, CometChatConstants.RECEIVER_TYPE_USER);
+                startActivity(intent)
+            }
+        })
+    }
+
+    fun newChatTapped(view: View?) {
+        startActivity(Intent(this@ConversationsActivity, ContactsActivity::class.java))
+    }
+}<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ConversationsActivity">
+    <fragment
+        android:id="@+id/conversationList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        class="screen.CometChatConversationListScreen" />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="32dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@android:drawable/ic_menu_add"
+        android:layout_gravity="bottom|end"
+        app:elevation="6dp"
+        android:onClick="newChatTapped"
+        app:pressedTranslationZ="12dp"/>
+</androidx.constraintlayout.widget.ConstraintLayout>class ContactsActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_contacts)
+    }
+}<fragment
+  android:id="@+id/userList"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  class="screen.CometChatUserListScreen"/>
